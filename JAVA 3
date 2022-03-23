@@ -1,0 +1,164 @@
+大家好，欢迎阅读金猪Ethan的JAVA小课堂。虽说是JAVA小课堂，但其实是梳理自己的JAVA做题笔记，理清思路，加深记忆，欢迎跟我一起学习。
+
+今天我们挑战一道难题，力扣23题，合并k个已排序好的Lists。题目本身很简洁，有k个linked-lists，每一个lists是已经按照升序排序好的，我们需要按照从小到大的顺序merge所有的lists并返回这个新的lists。
+
+今天这里分享的解体思路是，通过一列一列的比较，每一次比较找出当前列的最小值，并取出放进结果列中，直到所有的值都经过比较。思路可以通过下面一个例子来理解：
+
+
+比如我们有上面三个列 lists = [[2,3,4,5],[4,6,9],[1,7,8,8,9]]，我们第一次比较第一列，即每一个列中的第一个数字，2，4，1，这三个数字中最小的是1，那么我们把1取出来，放进结果中，第三列数字网右边移动一位，现在第三列变成了[7,8,8,9]，继续对比这一列的三个数字，2，4，7，最小数字为2，那么把2取出放进结果。以此类推，下一列比较的三个数字是3，4，7，再下一次是4，4，7，然后是5，4，7，然后5，6，7，然后6，7，然后9，7，然后9，8，然后9，8，然后9，9，然后9 然后就完成了所有的对比并得出了结果1，2，3，4，4，5，6，7，8，8，9，9
+
+我们已经有了思路，那么怎么设计代码呢？这次的代码对于初学者（本人）来说，也是有不小的挑战性，只能通过他人的结果来分析如何得到这样的结果。代码如下，我们一行一行过一遍，在自己能够自主写出这样优秀的代码之前，熟读他人的代码也不失为一种合适的学习方法。
+
+class Solution {
+
+public ListNode mergeKLists(ListNode[] lists) {
+
+int min_index = 0; 注释：这一行用来找出每一次对比中最小的index
+
+ListNode head = new ListNode(0); 这一行用来创建一个dummy head放在linked list最前面
+
+ListNode h = head; 这一行表示把h放在head这个地方，为之后的移动做准备。
+
+while(true){
+
+boolean isBreak = true; 这一行用来判断是否已经遍历了所有lists中的所有值，如果已经遍历了，就在后面break
+
+int min = Integer.MAX_VALUE; 这是常用的min的初始值，先给他一个计算机能接受的最大数，便于之后更新
+
+for (int i = 0; i < lists.length; i++){ 这一行是开始对所有lists进行一次循环
+
+if (lists[i] != null){ 这一行判断第i个lists中的这个list是否为空，也就是是否到达了lists的结尾处
+
+if (lists[i].val < min){ 如果上面不为空，到这一步判断这个第i个list的值是否小于之前得到的最小值
+
+min_index = i; 如果是的话，就更新最小的index为i，也就是lists中第i个list得到了最小值，比如说我们给的例子中第一次对比得到的最小值为1，对应的i为2，意思是说lists中，index为2，即第三列得到了最小值，这是这道题中的一个关键点，这个i后续还要用到，进行列表的向右移动的更新
+
+min = lists[i].val; 这里把对应的数值给到min
+
+}
+
+isBreak = false; 这里告诉系统，我们还没有遍历完全，那么就不会break弹出程序
+
+}
+
+}
+
+if(isBreak){
+
+break; 如果上面的代码已经遍历了所有数字，那么在这里isBreak就为true，那么我们就会弹出程序。
+
+}
+
+ListNode a = new ListNode(lists[min_index].val); 这里是创造一个新的listNode用来存储最小值
+
+h.next = a; 这里把a给接上，h的下一个node就链接我们创建的新的存储最小值的Node
+
+h = h.next; 这里是对h的更新，让我们一直往后可以更新我们的结果，每一次得到一个新的最小值就更新整个h
+
+lists[min_index] = lists[min_index].next; 同时，这里就是另一个精髓，把之前得到的min_index对应的那个位置用.next向右移动一位，便于我们进行下一次比较。
+
+}
+
+h.next = null; 全部装填结束之后，最后连上null做结尾。
+
+return head.next; 输出返回我们需要的整个list
+
+}
+
+}
+
+这里还有一个值得思考的问题：lists[i].val，为什么用这个代码可以直接得到整个lists中每一个linkedlist的第一个Node的值，这里来源于题目本身的设定：
+
+/**
+
+* Definition for singly-linked list.
+
+* public class ListNode {
+
+* int val;
+
+* ListNode next;
+
+* ListNode() {}
+
+* ListNode(int val) { this.val = val; }
+
+* ListNode(int val, ListNode next) { this.val = val; this.next = next; }
+
+* }
+
+*/
+
+这里规定了linked list的每一个listnode有如上所示的组成部分，val返回int值，并且如果我们不使用.next对node进行更新，那么.val得到的就是开头一个node 的值，因此这里可以直接使用lists[i].val得到每个list第一个node的值。
+
+接下来，补充一个针对这个方法的优化。
+
+上面我们已经通过每一次对比得到了每一次循环中最小的值，接下来我们尝试只用priorityqueue对上述方法进行优化。代码如下：
+
+class Solution {
+
+public ListNode mergeKLists(ListNode[] lists) {
+
+Comparator<ListNode> cmp;
+
+cmp = new Comparator<ListNode>(){
+
+@Override
+
+public int compare(ListNode o1, ListNode o2){
+
+return o1.val - o2.val;
+
+}
+
+};
+
+Queue<ListNode> q = new PriorityQueue<ListNode>(cmp);
+
+for(ListNode l : lists){
+
+if(l!= null){
+
+q.add(l);
+
+}
+
+}
+
+ListNode head = new ListNode(0);
+
+ListNode point = head;
+
+while (!q.isEmpty()){
+
+point.next = q.poll();
+
+point = point.next;
+
+ListNode next = point.next;
+
+if(next != null){
+
+q.add(next);
+
+}
+
+}
+
+return head.next;
+
+}
+
+}
+
+这里对PriorityQueue令我叹为观止，直接把linkedlist放进PriorityQueue的时候就进行每一个Node的对比，精髓部分在于：
+
+每一次添加linkedlist到PriorityQueue q中时，自动完成对比，将第一个数值最小的linkedlist放在最前面
+每一次point.next指向q.poll()这一个操作就是直接指向q中最小list的第一个值，同时把这个最小list整个的都给poll掉，然后再更新point为新链接上的最小值，然后把新链接的最小值的下一个值设置为next，我们判断一下next存不存在，如果存在，我们再把这个去掉第一个最小值的list再加回到q中，加回来的过程中，再一次已经自动对比了第一个数值的大小，如果还是很小，这个加回来的list照样还是排在第一位。
+可以看到，使用PriorityQueue能自动完成对比的过程，非常方便。
+
+能够想到利用Priority Queue来解决问题的强人真的令人非常震撼，需要有非常强的抽象能力，这个过程中，画图能帮助我们方便理解。
+
+触类旁通，PriorityQueue是一个有非常大可能性的思路方向，适用于array，list，linkedlist。经过这一道题目的锻炼，自己对于PriorityQueue的认识又加深了一些，同时对于Hard题目的畏惧又减小了一些。
+
+谢谢阅读，请继续享受学习。

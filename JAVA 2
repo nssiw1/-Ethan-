@@ -1,0 +1,43 @@
+大家好，欢迎阅读金猪Ethan的JAVA小课堂。虽说是JAVA小课堂，但其实是梳理自己的做题笔记，文字过一遍思路加深记忆。
+
+今天的题目是力扣215，题目很简单，给我们一个整数数组nums，和一个整数k，需要输出nums中第k个最大的值。
+
+趁热打铁，我们继续从PriorityQueue的角度来考虑这个问题。第k个最大的值是什么意思呢，如果是第1个最大的值，那么就是数组中最大的数字，第2个最大的值就是数组中第2大的数字，第k个最大的值就是从最大的值排列到最小的值，第k个最大的值。
+
+使用PriorityQueue的好处是，我们可以保持PriorityQueue中最多且只存在k个数字，如果运气比较好，k的数字比较小，那么第k个最大值后面更小的数字都不用考虑了，从这个角度来看，这种方法是能够比单纯的排列要节约时间，节约资源。
+
+该怎么样实现最终PriorityQueue中只包含k个数字呢？我们可以使用for循环。
+
+在此之前，我们先把PriorityQueue排个序，保证最小的数字在最前面，这样的话，最后剩下的PriorityQueue中第一个数字就是我们需要的数字，从而可以直接使用heap.poll（）来取得结果。
+
+保证最小的数字代码如下：
+
+PriorityQueue<Integer> heap = new PriorityQueue<Integer>((n1, n2) -> (n1-n2));
+
+在完成PriorityQueue的部署之后，接下来就是使用for循环将nums中的每一个数字加入到heap中，如果heap的size超过了k，那么就意味着多出了我们不需要考虑的值，这些数字都比较小，那么我们把最小的值直接poll出来，剩下继续添加，直到循环遍nums，最终heap中只留下k个数字，这k个数字中的最小数字就是我们需要的第k个最大的值。
+
+思路理清之后，代码如下：
+
+class Solution {
+
+public int findKthLargest(int[] nums, int k) {
+
+PriorityQueue<Integer> heap = new PriorityQueue<Integer> ((n1, n2) -> n1-n2);
+
+for (int n : nums){
+
+heap.add(n);
+
+if(heap.size() > k)
+
+heap.poll();
+
+}
+
+return heap.poll();
+
+}
+
+}
+
+触类旁通：在需要进行排序的问题中，我们都可以考虑使用PriorityQueue heap来解决，在每一次for循环过程中，善于利用heap.add()和heap.poll()进行对于PriorityQueue的操作。

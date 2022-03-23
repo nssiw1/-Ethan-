@@ -1,0 +1,107 @@
+大家好，欢迎阅读金猪Ethan的JAVA小课堂。虽说是JAVA小课堂，但其实是梳理自己的做题笔记，文字过一遍思路加深记忆。
+
+今天的题目是力扣253，我们有一个储存开会时间的数组叫intervals，　intervals[i] = [starti, endi]分别存储会议的开始时间与结束时间，我们需要设计一个算法来计算出一天中所需要的最小的会议室的数量。
+
+苦思冥想，PriorityQueue是一个不错的思路方向。
+
+１.　首先考虑边界条件，如果这个数组长度为０，是空的，那么所需要的会议室的数量也是空的。
+
+２.　利用PriorityQueue也叫做堆把所有会议的开始时间按从小到大排个序，并存储在堆中
+
+３.　考虑第一个会议，给第一个会议室，然后第二个会议，问题的核心其实就是如果要使用同一个会议室，那么两个会议时间没有重叠，也就是第二个会议的开始时间必然大于前一个会议的结束时间，在这个基础上，我们判断第二个会议的开始时间是否大于前一个会议的结束时间。有两种可能的结果，大于，那么我们就使用同一个会议室，节约资源；小于，那么我们就新开一个会议室给新的会议。同样的方法一直到最后一个会议结束为止。
+
+明白了思路之后，两个需要解决的大问题，第一个，如何利用堆给会议的开始时间按照从小到大进行排序。第二个，如果对比后一个会议的开始时间与前一个会议的结束时间。
+
+第一个问题，设计如下的堆进行对比，并使用一个for循环将所有会议添加进入堆中。
+
+PriorityQueue<Integer> allocator = new PriorityQueue<Integer>(
+
+intervals.length,
+
+new Comparator<Integer>(){
+
+public int compare(Integer a, Integer b){
+
+return a - b;
+
+}
+
+});
+
+第二个问题，是整道题目的核心，我们在将会议加入到堆的过程中就进行会议的开始时间和结束时间的对比，同样设计一个堆的对比功能如下：
+
+Arrays.sort(intervals,
+
+new Comparator<int[]>(){
+
+public int compare(final int[] a, int[] b){
+
+return a[0] - b[0];
+
+}
+
+});
+
+在这里我们对比的是两个数组的第一个元素的之间的大小比较。
+
+在所有的问题解决之后，代码就出来了：
+
+class Solution {
+
+public int minMeetingRooms(int[][] intervals) {
+
+if (intervals.length == 0){
+
+return 0;
+
+}
+
+PriorityQueue<Integer> allocator = new PriorityQueue<Integer>(
+
+intervals.length,
+
+new Comparator<Integer>(){
+
+public int compare(Integer a, Integer b){
+
+return a - b;
+
+}
+
+});
+
+Arrays.sort(intervals,
+
+new Comparator<int[]>(){
+
+public int compare(final int[] a, int[] b){
+
+return a[0] - b[0];
+
+}
+
+});
+
+allocator.add(intervals[0][1]);
+
+for (int i = 1; i < intervals.length; i++){
+
+if (intervals[i][0] >= allocator.peek()){
+
+allocator.poll();
+
+}
+
+allocator.add(intervals[i][1]);
+
+}
+
+return allocator.size();
+
+}
+
+}
+
+触类旁通，所有涉及大小比较的过程中，我们都可以把堆纳入到解决方案的考虑中，通过设计不同堆的对比来解决问题。
+
+谢谢阅读，请继续享受学习的过程。

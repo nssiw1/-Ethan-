@@ -1,0 +1,36 @@
+大家好，欢迎阅读金猪Ethan的SQL小课堂。今天继续分享一个相对高阶的SQL用法。
+
+我们直接看题目，Leetcode　262：
+
+我们有如下Trips　表记录每一个乘客，司机，所在城市，订单状态和订单时间：
+
+
+我们有另一个Users表存储每一个用户的状态（是否被封禁），以及用户的角色（属于司机还是乘客）。最终我们希望统计每一天的订单被取消率。结果如下：
+
+
+这个问题粗看还挺复杂，变量数不少，且需求的结果还是一个冷门的比率，但静下心来，深呼一口气，仔细分析题目，将题目拆解一下：
+
+我们必然需要时间，既然是每天的数据，我们需要使用GROUP　BY将request at分组表示为Day
+我们需要弄明白Cancellation Rate是什么，表示的是一天总共被取消的订单量除以一天总共的订单量，如何找到被取消订单的订单呢，这里就需要用到COUNT(IF(...))的功能。具体代码如下：(COUNT(IF(t.status != 'completed', TRUE, null))/COUNT(*))
+最后就是保证所有用户没有被封禁，只要满足User_Id对应的banned为No即可
+只要这样小小的分析一下，将问题抽丝剥茧，一个复杂的问题也变得简单，在上述思路的指引下，我们不难得出MySQL的结果：
+
+SELECT t.request_at AS Day, ROUND((COUNT(IF(t.status != 'completed', TRUE, null))/COUNT(*)), 2) AS 'Cancellation Rate'
+
+FROM Trips t
+
+WHERE t.Client_Id IN (SELECT Users_Id FROM Users WHERE Banned = 'No')
+
+AND t.Driver_Id IN (SELECT Users_Id FROM Users WHERE Banned = 'No')
+
+AND t.request_at BETWEEN '2013-10-01' AND '2013-10-03'
+
+GROUP BY t.Request_at;
+
+触类旁通：
+
+在遇到类似比例的问题中，我们可以使用固定搭配COUNT()/COUNT()，在遇到类似status这样的文字变量含有不同值的时候COUNT　IF也是一个固定搭配。
+
+遇到类似需要对用户进行筛选的时候，可以直观地使用IN和SUBQUERY再进行一次筛选。最终别忘记要GROUP BY。
+
+谢谢阅读。

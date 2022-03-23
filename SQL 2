@@ -1,0 +1,52 @@
+大家好，欢迎阅读金猪Ethan的SQL小课堂。今天分享一个工作学习中常用到的SQL小技巧。
+
+我给这个技巧一个名字，多列组合查找。
+
+先来看一个题目，以Leetcode　184题为例：
+
+我们有一个Employee表格如下：
+
+
+一个部门表格如下：
+
+
+我们希望的到每个部门薪水最高的员工与相应的薪水如下：
+
+
+在这个题目中，我们常用可以使用Group By和Order By来进行分组排列，但若是只要找到员工最高薪水题目就很直观，很简单了，这里还涉及到一个Department的变量，在这样的情况下，多列组合查找就派上了用场，代码如下：
+
+SELECT
+Department.name AS 'Department',
+Employee.name AS 'Employee',
+Salary
+FROM
+Employee
+JOIN
+Department ON Employee.DepartmentId = Department.Id
+WHERE
+(Employee.DepartmentId , Salary) IN
+( SELECT
+DepartmentId, MAX(Salary)
+FROM
+Employee
+GROUP BY DepartmentId
+)
+;
+
+这里代码的精髓部分在于Where后面部分：
+
+WHERE
+(Employee.DepartmentId , Salary) IN
+( SELECT
+DepartmentId, MAX(Salary)
+FROM
+Employee
+GROUP BY DepartmentId
+)
+;
+
+通常情况下，我们常仅使用一个变量进行IN的查找，但实际上MySQL提供多个变量组合进行查找的功能。
+
+这里我们可以使用一个括号将departmentId和Salary组合起来，查找每个部门的最高薪水，再回头对应到相应的员工得到答案。
+
+触类旁通：在日后工作学习中如果遇到类似题目甚至更多变量，我们都可以尝试使用括号进行组合后查找。方便快捷。
